@@ -1,0 +1,154 @@
+[
+  {
+    "event_id": "gd-finding-1234567890abcdef",
+    "timestamp": "2024-01-15T10:30:00Z",
+    "severity": "HIGH",
+    "source": "aws-guardduty",
+    "finding_type": "unauthorized-access",
+    "description": "Suspicious activity detected on EC2 instance i-1234567890abcdef0",
+    "affected_resources": [
+      "arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0"
+    ],
+    "metadata": {
+      "account_id": "123456789012",
+      "region": "us-east-1",
+      "tags": {
+        "Environment": "production",
+        "Application": "web-server"
+      }
+    }
+  },
+  {
+    "event_id": "sh-finding-0987654321fedcba",
+    "timestamp": "2024-01-15T11:45:00Z",
+    "severity": "MEDIUM",
+    "source": "aws-security-hub",
+    "finding_type": "compliance-violation",
+    "description": "S3 bucket security-config-bucket has public read access enabled",
+    "affected_resources": [
+      "arn:aws:s3:::security-config-bucket"
+    ],
+    "metadata": {
+      "account_id": "123456789012",
+      "region": "us-east-1",
+      "tags": {
+        "Environment": "development",
+        "Purpose": "configuration"
+      }
+    }
+  },
+  {
+    "event_id": "custom-finding-abcdef1234567890",
+    "timestamp": "2024-01-15T12:15:00Z",
+    "severity": "LOW",
+    "source": "custom",
+    "finding_type": "network-attack",
+    "description": "Multiple failed login attempts detected from IP 192.168.1.100",
+    "affected_resources": [
+      "arn:aws:ec2:us-east-1:123456789012:instance/i-0987654321fedcba0"
+    ],
+    "metadata": {
+      "account_id": "123456789012",
+      "region": "us-east-1",
+      "tags": {
+        "Environment": "staging",
+        "Application": "api-server"
+      }
+    }
+  },
+  {
+    "event_id": "gd-finding-555666777888999aaa",
+    "timestamp": "2024-01-15T13:20:00Z",
+    "severity": "CRITICAL",
+    "source": "aws-guardduty",
+    "finding_type": "malware",
+    "description": "Malware detected on EC2 instance i-555666777888999aaa0",
+    "affected_resources": [
+      "arn:aws:ec2:us-east-1:123456789012:instance/i-555666777888999aaa0"
+    ],
+    "metadata": {
+      "account_id": "123456789012",
+      "region": "us-east-1",
+      "tags": {
+        "Environment": "production",
+        "Application": "database-server"
+      }
+    }
+  },
+  {
+    "event_id": "config-finding-111222333444555666",
+    "timestamp": "2024-01-15T14:30:00Z",
+    "severity": "MEDIUM",
+    "source": "aws-config",
+    "finding_type": "compliance-violation",
+    "description": "IAM user has excessive permissions",
+    "affected_resources": [
+      "arn:aws:iam::123456789012:user/admin-user"
+    ],
+    "metadata": {
+      "account_id": "123456789012",
+      "region": "us-east-1",
+      "tags": {
+        "Environment": "production",
+        "Role": "administrator"
+      }
+    }
+  },
+  {
+    "event_id": "gd-finding-777888999aaabbbccc",
+    "timestamp": "2024-01-15T15:45:00Z",
+    "severity": "HIGH",
+    "source": "aws-guardduty",
+    "finding_type": "credential-compromise",
+    "description": "Suspicious API calls using compromised credentials",
+    "affected_resources": [
+      "arn:aws:iam::123456789012:user/service-account"
+    ],
+    "metadata": {
+      "account_id": "123456789012",
+      "region": "us-east-1",
+      "tags": {
+        "Environment": "production",
+        "Service": "automation"
+      }
+    }
+  },
+  {
+    "event_id": "sh-finding-dddeeefff000111222",
+    "timestamp": "2024-01-15T16:10:00Z",
+    "severity": "LOW",
+    "source": "aws-security-hub",
+    "finding_type": "network-attack",
+    "description": "Port scan detected from external IP",
+    "affected_resources": [
+      "arn:aws:ec2:us-east-1:123456789012:security-group/sg-1234567890abcdef0"
+    ],
+    "metadata": {
+      "account_id": "123456789012",
+      "region": "us-east-1",
+      "tags": {
+        "Environment": "production",
+        "Component": "load-balancer"
+      }
+    }
+  },
+  {
+    "event_id": "custom-finding-333444555666777888",
+    "timestamp": "2024-01-15T17:25:00Z",
+    "severity": "MEDIUM",
+    "source": "custom",
+    "finding_type": "data-exfiltration",
+    "description": "Large data transfer detected to external destination",
+    "affected_resources": [
+      "arn:aws:s3:::sensitive-data-bucket"
+    ],
+    "metadata": {
+      "account_id": "123456789012",
+      "region": "us-east-1",
+      "tags": {
+        "Environment": "production",
+        "DataClassification": "confidential"
+      }
+    }
+  }
+] 
