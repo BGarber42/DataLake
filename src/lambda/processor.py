@@ -48,7 +48,7 @@ FINDING_TYPES = [
 class SecurityFindingProcessor:
     """Processes, normalizes, and stores security findings as batched Parquet."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.s3_bucket = S3_BUCKET_NAME
         self.sns_topic_arn = SNS_TOPIC_ARN
         self.environment = ENVIRONMENT
