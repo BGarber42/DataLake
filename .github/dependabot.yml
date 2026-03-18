@@ -1,0 +1,52 @@
+version: 2
+
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "deps"
+    labels:
+      - "dependencies"
+      - "python"
+    groups:
+      aws:
+        patterns:
+          - "boto3"
+          - "botocore"
+          - "awswrangler"
+          - "s3transfer"
+      testing:
+        patterns:
+          - "pytest*"
+          - "moto*"
+          - "coverage"
+      linting:
+        patterns:
+          - "black"
+          - "flake8"
+          - "mypy*"
+
+  - package-ecosystem: "terraform"
+    directory: "/terraform"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "deps(terraform)"
+    labels:
+      - "dependencies"
+      - "terraform"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "deps(actions)"
+    labels:
+      - "dependencies"
+      - "ci"
