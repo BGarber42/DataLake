@@ -71,14 +71,14 @@ output "athena_results_s3_path" {
 output "deployment_summary" {
   description = "Summary of the deployed infrastructure"
   value = {
-    region           = var.aws_region
-    environment      = var.environment
-    s3_bucket        = module.storage.data_lake_bucket_id
-    sqs_queue        = module.ingestion.queue_url
-    lambda_function  = aws_lambda_function.security_processor.function_name
-    sns_topic        = var.enable_sns_alerts ? module.alerting[0].topic_arn : "Disabled"
-    glue_database    = module.analytics.glue_database_name
-    athena_table     = module.analytics.table_name
-    deployment_time  = timestamp()
+    region          = var.aws_region
+    environment     = var.environment
+    s3_bucket       = module.storage.data_lake_bucket_id
+    sqs_queue       = module.ingestion.queue_url
+    lambda_function = aws_lambda_function.security_processor.function_name
+    sns_topic       = var.enable_sns_alerts ? module.alerting[0].topic_arn : "Disabled"
+    glue_database   = module.analytics.glue_database_name
+    athena_table    = module.analytics.table_name
+    deployment_time = timestamp()
   }
 }

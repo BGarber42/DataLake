@@ -73,37 +73,90 @@ resource "aws_glue_catalog_table" "findings" {
       parameters            = { "serialization.format" = "1" }
     }
 
-    columns { name = "event_id"; type = "string" }
-    columns { name = "timestamp"; type = "string" }
-    columns { name = "severity"; type = "string" }
-    columns { name = "source"; type = "string" }
-    columns { name = "finding_type"; type = "string" }
-    columns { name = "description"; type = "string" }
-    columns { name = "affected_resources"; type = "array<string>" }
-    columns { name = "metadata_account_id"; type = "string" }
-    columns { name = "metadata_region"; type = "string" }
-    columns { name = "metadata_tags"; type = "string" }
-    columns { name = "processed_at"; type = "string" }
+    columns {
+      name = "event_id"
+      type = "string"
+    }
+
+    columns {
+      name = "timestamp"
+      type = "string"
+    }
+
+    columns {
+      name = "severity"
+      type = "string"
+    }
+
+    columns {
+      name = "source"
+      type = "string"
+    }
+
+    columns {
+      name = "finding_type"
+      type = "string"
+    }
+
+    columns {
+      name = "description"
+      type = "string"
+    }
+
+    columns {
+      name = "affected_resources"
+      type = "array<string>"
+    }
+
+    columns {
+      name = "metadata_account_id"
+      type = "string"
+    }
+
+    columns {
+      name = "metadata_region"
+      type = "string"
+    }
+
+    columns {
+      name = "metadata_tags"
+      type = "string"
+    }
+
+    columns {
+      name = "processed_at"
+      type = "string"
+    }
   }
 
-  partition_keys { name = "year"; type = "string" }
-  partition_keys { name = "month"; type = "string" }
-  partition_keys { name = "day"; type = "string" }
+  partition_keys {
+    name = "year"
+    type = "string"
+  }
+
+  partition_keys {
+    name = "month"
+    type = "string"
+  }
+
+  partition_keys {
+    name = "day"
+    type = "string"
+  }
 
   parameters = {
-    "EXTERNAL"                      = "TRUE"
-    "projection.enabled"            = "true"
-    "projection.year.type"          = "integer"
-    "projection.year.range"         = "2020,2035"
-    "projection.month.type"         = "integer"
-    "projection.month.range"        = "1,12"
-    "projection.day.type"           = "integer"
-    "projection.day.range"          = "1,31"
-    "storage.location.template"     = "s3://${var.data_lake_bucket_id}/findings/year=$${year}/month=$${month}/day=$${day}/"
-    "parquet.compression"           = "SNAPPY"
+    "EXTERNAL"                  = "TRUE"
+    "projection.enabled"        = "true"
+    "projection.year.type"      = "integer"
+    "projection.year.range"     = "2020,2035"
+    "projection.month.type"     = "integer"
+    "projection.month.range"    = "1,12"
+    "projection.day.type"       = "integer"
+    "projection.day.range"      = "1,31"
+    "storage.location.template" = "s3://${var.data_lake_bucket_id}/findings/year=$${year}/month=$${month}/day=$${day}/"
+    "parquet.compression"       = "SNAPPY"
   }
 
-  tags = var.tags
 }
 
 # ---------------------------------------------------------------------------

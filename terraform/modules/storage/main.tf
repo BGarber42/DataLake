@@ -52,6 +52,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "data_lake" {
     id     = "intelligent_tiering"
     status = "Enabled"
 
+    filter {}
+
     transition {
       days          = var.s3_lifecycle_days
       storage_class = "INTELLIGENT_TIERING"
@@ -121,6 +123,9 @@ resource "aws_s3_bucket_lifecycle_configuration" "athena_results" {
   rule {
     id     = "cleanup_old_results"
     status = "Enabled"
+
+    filter {}
+
     expiration { days = 7 }
   }
 }

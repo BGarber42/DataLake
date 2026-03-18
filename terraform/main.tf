@@ -3,7 +3,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0"
+      version = "~> 6.20"
     }
     random = {
       source  = "hashicorp/random"
@@ -64,23 +64,23 @@ locals {
 # Modules
 # ---------------------------------------------------------------------------
 module "storage" {
-  source           = "./modules/storage"
-  bucket_name      = local.s3_bucket_name
+  source            = "./modules/storage"
+  bucket_name       = local.s3_bucket_name
   s3_lifecycle_days = var.s3_lifecycle_days
-  s3_glacier_days  = var.s3_glacier_days
-  tags             = merge(local.common_tags, var.tags)
+  s3_glacier_days   = var.s3_glacier_days
+  tags              = merge(local.common_tags, var.tags)
 }
 
 module "alerting" {
   count = var.enable_sns_alerts ? 1 : 0
 
-  source             = "./modules/alerting"
-  topic_name         = local.sns_topic_name
-  lambda_role_arn    = aws_iam_role.lambda_execution_role.arn
-  email_endpoints    = var.sns_email_endpoints
-  queue_name         = local.sqs_queue_name
+  source                 = "./modules/alerting"
+  topic_name             = local.sns_topic_name
+  lambda_role_arn        = aws_iam_role.lambda_execution_role.arn
+  email_endpoints        = var.sns_email_endpoints
+  queue_name             = local.sqs_queue_name
   enable_cloudwatch_logs = var.enable_cloudwatch_logs
-  tags               = merge(local.common_tags, var.tags)
+  tags                   = merge(local.common_tags, var.tags)
 }
 
 module "ingestion" {
