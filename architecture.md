@@ -14,7 +14,7 @@ graph TB
         end
         
         subgraph "Processing Layer"
-            C[Lambda Function<br/>security-data-processor<br/>Python 3.11]
+            C[Lambda Function<br/>security-data-processor<br/>Python 3.14]
         end
         
         subgraph "Storage Layer"
@@ -107,7 +107,7 @@ graph TB
 - **Dead Letter Queue**: Enabled for failed processing
 
 ### Lambda Function
-- **Runtime**: Python 3.11
+- **Runtime**: Python 3.14
 - **Memory**: 512 MB (configurable)
 - **Timeout**: 60 seconds
 - **Concurrency**: Up to 1000 concurrent executions
