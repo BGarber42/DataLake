@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, List
 
 import boto3
-from botocore.exceptions import ClientError, NoCredentialsError
+from botocore.exceptions import ClientError
 
 
 class SecurityDataLakeTester:
