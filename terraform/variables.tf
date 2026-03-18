@@ -38,9 +38,9 @@ variable "lambda_memory_size" {
 }
 
 variable "sqs_visibility_timeout" {
-  description = "SQS visibility timeout in seconds"
+  description = "SQS visibility timeout in seconds (must be >= 6x lambda_timeout to prevent duplicate processing)"
   type        = number
-  default     = 30
+  default     = 360
   
   validation {
     condition     = var.sqs_visibility_timeout >= 0 && var.sqs_visibility_timeout <= 43200

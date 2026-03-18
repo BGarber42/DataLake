@@ -1,15 +1,29 @@
 -- Example Athena Queries for Security Data Lake Analysis
 -- Replace 'security_db' and 'security_findings' with your actual database and table names
+--
+-- IMPORTANT: SQS Standard provides at-least-once delivery, so retried Lambda
+-- invocations can write duplicate rows. Use the deduplicated view for accurate
+-- counts. Run the "create-dedup-view" Athena named query once after first deploy.
 
 -- =============================================================================
--- BASIC QUERIES
+-- DEDUPLICATION — run once after first deploy (also available as named query)
+-- =============================================================================
+
+-- CREATE OR REPLACE VIEW security_findings_deduped AS
+-- SELECT * FROM (
+--   SELECT *, ROW_NUMBER() OVER (PARTITION BY event_id ORDER BY processed_at DESC) AS _row_num
+--   FROM security_db.security_findings
+-- ) WHERE _row_num = 1;
+
+-- =============================================================================
+-- BASIC QUERIES (using deduplicated view)
 -- =============================================================================
 
 -- 1. Count total findings by severity
 SELECT 
     severity,
     COUNT(*) as finding_count
-FROM security_db.security_findings
+FROM security_db.security_findings_deduped
 GROUP BY severity
 ORDER BY 
     CASE severity 
@@ -116,24 +130,24 @@ ORDER BY finding_count DESC;
 -- METADATA ANALYSIS
 -- =============================================================================
 
--- 9. Findings by environment (from metadata tags)
+-- 9. Findings by environment (from metadata_tags JSON)
 SELECT 
-    metadata.tags.Environment as environment,
+    JSON_EXTRACT_SCALAR(metadata_tags, '$.Environment') as environment,
     COUNT(*) as finding_count,
     COUNT(CASE WHEN severity IN ('HIGH', 'CRITICAL') THEN 1 END) as high_severity_count
-FROM security_db.security_findings
-WHERE metadata.tags.Environment IS NOT NULL
-GROUP BY metadata.tags.Environment
+FROM security_db.security_findings_deduped
+WHERE JSON_EXTRACT_SCALAR(metadata_tags, '$.Environment') IS NOT NULL
+GROUP BY JSON_EXTRACT_SCALAR(metadata_tags, '$.Environment')
 ORDER BY finding_count DESC;
 
 -- 10. Findings by region
 SELECT 
-    metadata.region as region,
+    metadata_region as region,
     COUNT(*) as finding_count,
     COUNT(CASE WHEN severity IN ('HIGH', 'CRITICAL') THEN 1 END) as high_severity_count
-FROM security_db.security_findings
-WHERE metadata.region IS NOT NULL
-GROUP BY metadata.region
+FROM security_db.security_findings_deduped
+WHERE metadata_region IS NOT NULL
+GROUP BY metadata_region
 ORDER BY finding_count DESC;
 
 -- =============================================================================

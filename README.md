@@ -1,81 +1,74 @@
 # Serverless Security Data Lake
 
-A modern, production-ready serverless data platform for ingesting, processing, and analyzing security findings using AWS services.
+A production-ready serverless data platform for ingesting, processing, and analyzing security findings using AWS services. Data is stored as columnar **Parquet** for efficient, low-cost Athena queries.
 
 ## Architecture Overview
 
-This system implements a fully serverless security data pipeline that ingests security findings via SQS, processes them with Lambda, stores them in S3 with optimal partitioning, and enables ad-hoc analysis through Amazon Athena.
-
-### Data Flow
-
-1. **Ingestion**: Security findings are sent as JSON messages to an SQS queue
-2. **Processing**: Lambda functions are triggered by SQS messages and normalize the data
-3. **Storage**: Processed data is stored in S3 with date-based partitioning for efficient querying
-4. **Analysis**: Amazon Athena provides SQL query capabilities over the partitioned data
-5. **Alerting**: High-severity findings trigger SNS notifications
-
-## Ephemeral by Design Philosophy
-
-This project is designed to be **ephemeral** - provisioned on-demand and torn down when not in use to maintain zero idle costs and demonstrate Infrastructure as Code (IaC) best practices.
-
-### Workflow
-
-```bash
-# Provision the infrastructure
-terraform init
-terraform apply
-
-# Test the system
-# Send test messages to SQS and verify data flow
-
-# Destroy when done
-terraform destroy
+```
+Security Findings ─► SQS Queue ─► Lambda (batch) ─► S3 (Parquet, partitioned) ─► Athena
+                                       │
+                                       └─► SNS (HIGH/CRITICAL alerts)
 ```
 
-### Benefits of Ephemeral Design
+1. **Ingestion** — Security findings arrive as JSON on an SQS queue.
+2. **Processing** — A Lambda function (triggered in batches of 10) validates, normalizes, and writes Parquet files to S3.
+3. **Storage** — Parquet files land in S3 with Hive-style partitioning (`year=/month=/day=`), lifecycle-tiered to Intelligent-Tiering → Glacier.
+4. **Analysis** — Amazon Athena queries the Glue-cataloged Parquet data via partition projection.
+5. **Alerting** — HIGH/CRITICAL findings trigger SNS notifications.
 
-- **Zero Idle Costs**: No charges when the system is not in use
-- **Clean Environment**: Each deployment starts with a fresh, clean state
-- **IaC Validation**: Ensures all infrastructure is properly codified
-- **Security**: Reduces attack surface by not maintaining persistent resources
-- **Compliance**: Demonstrates ability to recreate environments from code
+## Ephemeral by Design
+
+This project is **ephemeral** — provisioned on-demand and torn down when not in use to maintain zero idle costs and validate Infrastructure as Code.
+
+```bash
+cd terraform
+terraform init
+terraform apply     # provision
+terraform destroy   # tear down when done
+```
 
 ## Technology Stack
 
-- **Cloud Provider**: AWS
-- **Ingestion**: Amazon SQS (Standard Queue)
-- **Processing**: AWS Lambda (Python 3.11)
-- **Storage**: Amazon S3 (with intelligent tiering)
-- **Query Engine**: Amazon Athena
-- **Data Catalog**: AWS Glue
-- **Alerting**: Amazon SNS
-- **Infrastructure**: Terraform
-- **Data Format**: JSON with Parquet optimization for Athena
+| Layer       | Technology                            |
+|-------------|---------------------------------------|
+| IaC         | Terraform ≥ 1.0 (modular)            |
+| Ingestion   | Amazon SQS (with DLQ)                |
+| Processing  | AWS Lambda (Python 3.14, awswrangler)|
+| Storage     | Amazon S3 (Parquet, lifecycle-tiered) |
+| Catalog     | AWS Glue                              |
+| Query       | Amazon Athena (engine v3)             |
+| Alerting    | Amazon SNS                            |
+| CI/CD       | GitHub Actions                        |
 
 ## Project Structure
 
 ```
 .
-├── README.md                 # This documentation
-├── architecture.md           # Detailed architecture diagram
+├── .github/workflows/
+│   └── ci.yml                    # CI pipeline (lint, test, terraform validate)
+├── src/lambda/
+│   └── processor.py              # Lambda function (batch Parquet writer)
+├── tests/
+│   ├── conftest.py               # Shared fixtures
+│   └── test_processor.py         # Unit tests (moto-based)
 ├── terraform/
-│   ├── main.tf              # Main Terraform configuration
-│   ├── variables.tf         # Variable definitions
-│   ├── outputs.tf           # Output values
-│   ├── providers.tf         # Provider configuration
-│   ├── s3.tf               # S3 bucket and policies
-│   ├── sqs.tf              # SQS queue configuration
-│   ├── lambda.tf           # Lambda function and IAM
-│   ├── athena.tf           # Athena and Glue configuration
-│   └── sns.tf              # SNS topic for alerts
-├── src/
-│   └── lambda/
-│       └── processor.py     # Lambda function code
+│   ├── main.tf                   # Root config (provider, locals, Lambda, module wiring)
+│   ├── variables.tf              # Input variables with validation
+│   ├── outputs.tf                # Output values
+│   └── modules/
+│       ├── storage/main.tf       # S3 buckets, encryption, lifecycle
+│       ├── ingestion/main.tf     # SQS queues, event source mapping
+│       ├── analytics/main.tf     # Glue catalog, Athena workgroup
+│       └── alerting/main.tf      # SNS topic, subscriptions, filters
 ├── examples/
-│   ├── test-messages.json   # Sample security findings
-│   └── athena-queries.sql  # Example Athena queries
-└── scripts/
-    └── send-test-message.py # Script to send test messages
+│   ├── test-messages.json        # Sample security findings
+│   └── athena-queries.sql        # Example Athena queries
+├── scripts/
+│   └── send-test-message.py      # CLI tool to send test findings
+├── pyproject.toml                # Project metadata, deps, and tool config (uv-managed)
+├── uv.lock                      # Locked dependency graph (committed)
+├── requirements.txt              # Pinned runtime deps for Lambda packaging
+└── README.md
 ```
 
 ## Quick Start
@@ -83,57 +76,73 @@ terraform destroy
 ### Prerequisites
 
 - AWS CLI configured with appropriate permissions
-- Terraform installed (version >= 1.0)
-- Python 3.11+ (for local testing)
+- Terraform ≥ 1.0
+- Python 3.14+
 
-### Deployment
-
-1. **Initialize Terraform**:
-   ```bash
-   cd terraform
-   terraform init
-   ```
-
-2. **Review the plan**:
-   ```bash
-   terraform plan
-   ```
-
-3. **Deploy the infrastructure**:
-   ```bash
-   terraform apply
-   ```
-
-4. **Send test messages**:
-   ```bash
-   python ../scripts/send-test-message.py
-   ```
-
-5. **Query the data**:
-   - Use the Athena queries in `examples/athena-queries.sql`
-   - Access Athena through the AWS Console or CLI
-
-### Cleanup
-
-When you're done testing:
+### Deploy
 
 ```bash
+cd terraform
+terraform init
+terraform plan
+terraform apply
+```
+
+### Send Test Messages
+
+```bash
+python scripts/send-test-message.py --queue-url $(cd terraform && terraform output -raw sqs_queue_url)
+```
+
+### Query Data
+
+Use the Athena queries in `examples/athena-queries.sql` or query via the AWS Console against the `security_db.security_findings` table.
+
+### Tear Down
+
+```bash
+cd terraform
 terraform destroy
+```
+
+## Development
+
+This project uses [uv](https://docs.astral.sh/uv/) for dependency management to keep your system Python clean.
+
+### Setup
+
+```bash
+uv sync        # creates .venv and installs all deps (runtime + dev)
+```
+
+### Run Tests
+
+```bash
+uv run pytest
+uv run pytest --cov=src --cov-report=term-missing
+```
+
+### Lint & Format
+
+```bash
+uv run black --check .
+uv run flake8 src/ tests/
+uv run mypy src/
 ```
 
 ## Data Schema
 
-### Input Schema (Security Finding)
+### Input (Security Finding)
 
 ```json
 {
   "event_id": "uuid-string",
   "timestamp": "2024-01-15T10:30:00Z",
-  "severity": "HIGH|MEDIUM|LOW",
-  "source": "aws-guardduty|aws-security-hub|custom",
-  "finding_type": "malware|unauthorized-access|data-exfiltration",
-  "description": "Detailed description of the security finding",
-  "affected_resources": ["arn:aws:ec2:region:account:instance/i-1234567890abcdef0"],
+  "severity": "HIGH|MEDIUM|LOW|CRITICAL",
+  "source": "aws-guardduty|aws-security-hub|aws-config|custom",
+  "finding_type": "malware|unauthorized-access|data-exfiltration|...",
+  "description": "Detailed description",
+  "affected_resources": ["arn:aws:..."],
   "metadata": {
     "account_id": "123456789012",
     "region": "us-east-1",
@@ -142,66 +151,19 @@ terraform destroy
 }
 ```
 
-### Output Schema (Normalized)
+### Output (Parquet, partitioned)
 
-The Lambda processor normalizes the data and stores it with the following structure:
+- **Path**: `s3://bucket/findings/year=YYYY/month=MM/day=DD/*.parquet`
+- **Format**: Parquet (Snappy compression via awswrangler)
+- **Partition projection**: Enabled for zero-maintenance partition discovery
 
-- **Partitioning**: `s3://bucket/findings/year=YYYY/month=MM/day=DD/`
-- **File Format**: JSON (one finding per file)
-- **Naming**: `{event_id}.json`
+## Security
 
-## Monitoring and Alerting
-
-- **CloudWatch Logs**: All Lambda executions are logged
-- **CloudWatch Metrics**: SQS queue depth, Lambda duration, errors
-- **SNS Alerts**: High-severity findings trigger immediate notifications
-- **Athena Query History**: Track query performance and usage
-
-## Security Considerations
-
-- **IAM Least Privilege**: All resources use minimal required permissions
-- **Encryption**: Data encrypted at rest and in transit
-- **VPC**: Lambda functions can be configured to run in VPC if needed
-- **Audit Logging**: All API calls logged via CloudTrail
-
-## Cost Optimization
-
-- **S3 Intelligent Tiering**: Automatically moves data to cost-effective storage
-- **Athena Query Optimization**: Partitioned data reduces scan costs
-- **Lambda Timeout**: Configured to prevent runaway executions
-- **SQS Visibility Timeout**: Optimized for processing time
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Lambda Timeout**: Increase timeout in `lambda.tf`
-2. **SQS Message Processing**: Check CloudWatch logs for errors
-3. **Athena Query Failures**: Verify partition structure in S3
-4. **Permission Errors**: Ensure IAM roles have correct permissions
-
-### Debug Commands
-
-```bash
-# Check Lambda logs
-aws logs tail /aws/lambda/security-data-processor --follow
-
-# Monitor SQS queue
-aws sqs get-queue-attributes --queue-url $(terraform output -raw sqs_queue_url)
-
-# Test Athena query
-aws athena start-query-execution --query-string "SELECT COUNT(*) FROM security_findings" --result-configuration OutputLocation=s3://your-bucket/athena-results/
-```
-
-## Contributing
-
-This project follows Infrastructure as Code best practices:
-
-1. All changes must be made through Terraform
-2. Test changes with `terraform plan` before applying
-3. Use consistent naming conventions
-4. Document any new variables or outputs
+- IAM least-privilege policies per resource
+- S3 bucket policies enforce server-side encryption (AES-256)
+- Public access blocked on all buckets
+- All API calls logged via CloudTrail
 
 ## License
 
-This project is provided as-is for educational and demonstration purposes. 
+This project is provided as-is for educational and demonstration purposes.
