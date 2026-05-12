@@ -28,6 +28,10 @@ updates:
           - "black"
           - "flake8"
           - "mypy*"
+    # Generate updated lockfile automatically
+    post-update-hook:
+      command: "install"
+      args: ["-e", ".[dev]"]
 
   - package-ecosystem: "terraform"
     directory: "/terraform"
